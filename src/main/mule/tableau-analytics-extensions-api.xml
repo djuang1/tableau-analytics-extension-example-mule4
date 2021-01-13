@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+    <http:listener-config name="tableau-analytics-extensions-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="tableau-analytics-extensions-api-config" api="resource::b85b361d-0842-4b70-af37-2723c2c3ae7e:tableau-analytics-extensions-api:1.0.5:oas:zip:tableau-analytics-extensions-api.yaml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="OpenExchangeRates_HTTP_Request" doc:name="HTTP Request configuration" doc:id="bacf78a5-7e98-4076-8b05-ca2ae1ef073f">
+        <http:request-connection protocol="HTTPS" host="openexchangerates.org" port="443" />
+    </http:request-config>
+    <configuration-properties doc:name="Configuration properties" doc:id="7e5e1a91-c823-43c9-b5a6-2c9315231549" file="config.dev.yaml" />
+    <flow name="tableau-analytics-extensions-api-main">
+        <http:listener config-ref="tableau-analytics-extensions-api-httpListenerConfig" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="tableau-analytics-extensions-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="tableau-analytics-extensions-api-console">
+        <http:listener config-ref="tableau-analytics-extensions-api-httpListenerConfig" path="/api/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="tableau-analytics-extensions-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\info:tableau-analytics-extensions-api-config">
+        <logger level="INFO" message="get:\info:tableau-analytics-extensions-api-config" />
+        <ee:transform doc:name="Transform Message" doc:id="918eb7c2-246b-4722-a0f8-e358f55cadbe">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	creation_time: 0,	
+	versions: {
+		v1: {
+			features: {
+				authentication: {
+					methods: {
+						"basic-auth": {}
+					},
+					required: true
+				}
+			}
+		}
+	},	
+	name: "Analytics Extensions API using MuleSoft",
+	description: "A live demo of an analytics extension service using MuleSoft",
+	server_version: "1.0.0",
+	state_path: "http://tableau-extension.us-e1.cloudhub.io/api"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6cffeb6c-d7d1-4c94-a824-dd1a204d14b6" message="#[payload]"/>
+    </flow>
+    <flow name="post:\evaluate:application\json:tableau-analytics-extensions-api-config">
+        <ee:transform doc:name="Transform Message" doc:id="9fad33fb-3923-41d4-846f-527f4fd7a7b2">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="data"><![CDATA[%dw 2.0
+output application/java
+---
+payload.data]]></ee:set-variable>
+                <ee:set-variable variableName="script"><![CDATA[%dw 2.0
+output application/java
+---
+payload.script]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <choice doc:name="Choice" doc:id="ef669071-04bb-41fd-8746-72fbc1fe59ec">
+            <when expression="vars.script == 'return int(1)'">
+                <ee:transform doc:name="Transform Message" doc:id="63e194a5-faef-4a50-8fd0-4a4f8f7544ce">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+	1
+]]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <choice doc:name="Choice" doc:id="ee1dbda8-0d74-41d3-9256-a4e0751c9f51">
+                    <when expression="vars.script == 'currency'">
+                        <http:request method="GET" doc:name="OpenExchangeRates" doc:id="7e29c96e-688a-41f4-9c77-9a464911d3df" config-ref="OpenExchangeRates_HTTP_Request" path="/api/latest.json">
+                            <http:query-params><![CDATA[#[output application/java
+---
+{
+	"symbols" : vars.data."_arg2"[0] ++ "," ++ vars.data."_arg3"[0],
+	"app_id" : p('currency.app_id')
+}]]]></http:query-params>
+                        </http:request>
+                        <ee:transform doc:name="Transform Message" doc:id="63007e81-9304-42f5-93c0-b0526cb08aa8">
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json 
+var from = vars.data."_arg2"[0]
+var to = vars.data."_arg3"[0]
+---
+[
+	(payload.rates[to]/payload.rates[from])*(vars.data."_arg1"[0])
+]]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+						<logger level="INFO" doc:name="Logger" doc:id="a0f7eebc-ed6c-473e-9fe1-e5382b660873" />
+                    </when>
+                    <otherwise>
+                        <ee:transform doc:name="Transform Message" doc:id="fc1d120c-ffda-407e-b3af-2ca04155ca03">
+                            <ee:message>
+                                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+	"2"
+]]]></ee:set-payload>
+                            </ee:message>
+                        </ee:transform>
+                    </otherwise>
+                </choice>
+            </otherwise>
+        </choice>
+        <!--
+		<file:write doc:name="Write" doc:id="8cbcdf7e-6d16-45f9-8a99-5af3eaed2b72" path='#["${mule.home}/apps/${app.name}/script.js"]'>
+			<file:content ><![CDATA[#[vars.script]]]></file:content>
+		</file:write>
+		-->
+    </flow>
+</mule>
