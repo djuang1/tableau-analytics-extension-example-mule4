@@ -81,13 +81,7 @@
             <version>1.3.18</version>
             <classifier>mule-plugin</classifier>
         </dependency>
-    	<dependency>
-            <groupId>b85b361d-0842-4b70-af37-2723c2c3ae7e</groupId>
-            <artifactId>tableau-analytics-extensions-api</artifactId>
-            <version>1.0.5</version>
-            <classifier>oas</classifier>
-            <type>zip</type>
-        </dependency>
+
     </dependencies>
 
 	<repositories>

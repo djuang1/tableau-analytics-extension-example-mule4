@@ -3,7 +3,7 @@
     <http:listener-config name="tableau-analytics-extensions-api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="tableau-analytics-extensions-api-config" api="resource::b85b361d-0842-4b70-af37-2723c2c3ae7e:tableau-analytics-extensions-api:1.0.5:oas:zip:tableau-analytics-extensions-api.yaml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="tableau-analytics-extensions-api-config" api="api/tableau-analytics-extensions-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <http:request-config name="OpenExchangeRates_HTTP_Request" doc:name="HTTP Request configuration" doc:id="bacf78a5-7e98-4076-8b05-ca2ae1ef073f">
         <http:request-connection protocol="HTTPS" host="openexchangerates.org" port="443" />
     </http:request-config>
