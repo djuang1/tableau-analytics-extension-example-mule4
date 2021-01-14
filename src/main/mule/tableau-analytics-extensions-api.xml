@@ -3,7 +3,7 @@
     <http:listener-config name="tableau-analytics-extensions-api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="tableau-analytics-extensions-api-config" api="api/tableau-analytics-extensions-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="tableau-analytics-extensions-api-config" api="tableau-analytics-extensions-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <http:request-config name="OpenExchangeRates_HTTP_Request" doc:name="HTTP Request configuration" doc:id="bacf78a5-7e98-4076-8b05-ca2ae1ef073f">
         <http:request-connection protocol="HTTPS" host="openexchangerates.org" port="443" />
     </http:request-config>
@@ -155,7 +155,7 @@ output application/json
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="6cffeb6c-d7d1-4c94-a824-dd1a204d14b6" message="#[payload]"/>
+        <logger level="INFO" doc:name="Logger" doc:id="6cffeb6c-d7d1-4c94-a824-dd1a204d14b6" message="#[payload]" />
     </flow>
     <flow name="post:\evaluate:application\json:tableau-analytics-extensions-api-config">
         <ee:transform doc:name="Transform Message" doc:id="9fad33fb-3923-41d4-846f-527f4fd7a7b2">
@@ -171,9 +171,9 @@ output application/java
 payload.script]]></ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <choice doc:name="Choice" doc:id="ef669071-04bb-41fd-8746-72fbc1fe59ec">
-            <when expression="vars.script == 'return int(1)'">
-                <ee:transform doc:name="Transform Message" doc:id="63e194a5-faef-4a50-8fd0-4a4f8f7544ce">
+        <choice doc:name="Choice" doc:id="ee1dbda8-0d74-41d3-9256-a4e0751c9f51">
+                    <when expression="vars.script == 'return int(1)'">
+						<ee:transform doc:name="Transform Message" doc:id="eac8de73-13e6-4037-a966-93330358a50b">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -183,9 +183,7 @@ output application/json
 ]]]></ee:set-payload>
                     </ee:message>
                 </ee:transform>
-            </when>
-            <otherwise>
-                <choice doc:name="Choice" doc:id="ee1dbda8-0d74-41d3-9256-a4e0751c9f51">
+					</when>
                     <when expression="vars.script == 'currency'">
                         <http:request method="GET" doc:name="OpenExchangeRates" doc:id="7e29c96e-688a-41f4-9c77-9a464911d3df" config-ref="OpenExchangeRates_HTTP_Request" path="/api/latest.json">
                             <http:query-params><![CDATA[#[output application/java
@@ -207,9 +205,10 @@ var to = vars.data."_arg3"[0]
 ]]]></ee:set-payload>
                             </ee:message>
                         </ee:transform>
-						<logger level="INFO" doc:name="Logger" doc:id="a0f7eebc-ed6c-473e-9fe1-e5382b660873" />
+                        <logger level="INFO" doc:name="Logger" doc:id="a0f7eebc-ed6c-473e-9fe1-e5382b660873" />
                     </when>
-                    <otherwise>
+                    
+					<otherwise>
                         <ee:transform doc:name="Transform Message" doc:id="fc1d120c-ffda-407e-b3af-2ca04155ca03">
                             <ee:message>
                                 <ee:set-payload><![CDATA[%dw 2.0
@@ -222,8 +221,6 @@ output application/json
                         </ee:transform>
                     </otherwise>
                 </choice>
-            </otherwise>
-        </choice>
         <!--
 		<file:write doc:name="Write" doc:id="8cbcdf7e-6d16-45f9-8a99-5af3eaed2b72" path='#["${mule.home}/apps/${app.name}/script.js"]'>
 			<file:content ><![CDATA[#[vars.script]]]></file:content>
